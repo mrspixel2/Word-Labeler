@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { LabelerService } from '../Services/labeler.service';
 
 interface Annotation {
   start: number;
@@ -10,117 +11,19 @@ interface Annotation {
 
 @Component({
   selector: 'app-label-input',
-  template: `
-    <div class="container">
-    <div class="alert alert-success" role="alert" *ngIf="successMessage"> {{successMessage}} </div>
-    <div class="alert alert-danger" role="alert" *ngIf="errMessage"> {{errMessage}} </div>  
-      <textarea class="input-text" [(ngModel)]="document" rows="10" cols="50"></textarea>
-      <br>
-      <div class="label-input">
-        <input class="input-label" [(ngModel)]="label" placeholder="Enter label">
-        <button class="button-label" (click)="addLabel()">Add Label</button>
-      </div>
-      <br>
-      <div class="select-label">
-        <select class="input-select" [(ngModel)]="selectedLabel">
-          <option *ngFor="let label of labels" [value]="label">{{ label }}</option>
-        </select>
-        <button class="button-annotate" (click)="annotateSelection()">Annotate Selection</button>
-      </div>
-      <br>
-      <button class="button-export" (click)="exportAnnotations()">Export Annotations</button>
-      <br>
-      <ul class="list-annotations">
-        <li *ngFor="let annotation of annotations">
-          {{ annotation.text }} ({{ annotation.label }})
-        </li>
-      </ul>
-      <div *ngIf="jsonData">{{jsonData | json}}</div>
-    </div>
-  `,
-  styles: [`
-    .container {
-      padding: 20px;
-    }
-    .input-text {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      resize: none;
-    }
-    .label-input {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .input-label {
-      width: 70%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .button-label {
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      background-color: #007bff;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .select-label {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .input-select {
-      width: 70%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .button-annotate {
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      background-color: #007bff;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .button-export {
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      background-color: #007bff;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .list-annotations {
-      padding: 0;
-      margin: 0;
-    }
-    .list-annotations li {
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
-  `]
+  templateUrl: './label-input.component.html',
+  styleUrls: ['./label-input.component.css']
 })
-export class LabelInputComponent {
+export class LabelInputComponent implements OnInit {
+
+  ngOnInit(): void {
+  }
+  constructor(private http: HttpClient , private labelerService : LabelerService) { }
   document = '';
   label = '';
   labels: string[] = [];
   selectedLabel = '';
   annotations: Annotation[] = [];
-
-  constructor(private http: HttpClient) { }
 
   addLabel() {
     if (this.label.trim() === '') {
@@ -160,9 +63,9 @@ export class LabelInputComponent {
     }
   }
 
-  successMessage: string = "" ; 
-  errMessage: string = "" ; 
-  jsonData : any ;
+  successMessage: string = "";
+  errMessage: string = "";
+  jsonData: any;
 
   exportAnnotations() {
     if (this.annotations.length === 0) {
@@ -175,10 +78,10 @@ export class LabelInputComponent {
       annotation: this.annotations
     };
 
-    this.http.post('http://127.0.0.1:8000/save_annotation/', data, {responseType: 'blob'}).subscribe({
-      next:(value:any)=>{
-        this.jsonData=value;
+    this.labelerService.saveAnnotation(data).subscribe({
+      next: (value: any) => {
         this.successMessage = "success";
+        this.jsonData= data ; 
 
         const blob = new Blob([value], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
@@ -187,13 +90,13 @@ export class LabelInputComponent {
         a.download = 'annotations.json';
         a.click();
         window.URL.revokeObjectURL(url);
-        //console.log(value);
+        console.log(value);
       },
-      error:(err)=>{
+      error: (err) => {
         this.errMessage = err;
         //console.log(err);
       },
-      complete:()=>{
+      complete: () => {
         console.log("complete!");
       }
     })

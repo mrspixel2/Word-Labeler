@@ -1,1 +1,31 @@
-<p>label-input works!</p>
+<div class="container">
+    <div class="title">
+        <h1>try here!</h1>
+    </div>
+    <div class="alert alert-success" role="alert" *ngIf="successMessage"> {{successMessage}} </div>
+    <div class="alert alert-danger" role="alert" *ngIf="errMessage"> {{errMessage}} </div>
+    <textarea class="input-text" [(ngModel)]="document" rows="10" cols="50"></textarea>
+    <br>
+    <div class="label-input">
+        <input class="input-label" [(ngModel)]="label" placeholder="Enter label">
+        <button class="button-label" (click)="addLabel()">Add Label</button>
+    </div>
+    <br>
+    <div class="select-label">
+        <select class="input-select" [(ngModel)]="selectedLabel">
+            <option *ngFor="let label of labels" [value]="label">{{ label }}</option>
+        </select>
+        <button class="button-annotate" (click)="annotateSelection()">Annotate Selection</button>
+    </div>
+    <br>
+    <div class="center">
+        <button class="button-export" (click)="exportAnnotations()">Export Annotations</button>
+    </div>
+    <br>
+    <ul class="list-annotations">
+        <li *ngFor="let annotation of annotations">
+            {{ annotation.text }} ({{ annotation.label }})
+        </li>
+    </ul>
+    <div *ngIf="jsonData">{{jsonData | json}}</div>
+</div>
